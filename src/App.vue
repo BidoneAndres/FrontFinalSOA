@@ -3,5 +3,7 @@ import DefaultLayout from "@/layouts/DefaultLayout.vue";
 </script>
 
 <template>
-  <DefaultLayout />
+  <DefaultLayout v-if="$route.name !== 'login'" />
+  
+  <router-view v-else />
 </template>
