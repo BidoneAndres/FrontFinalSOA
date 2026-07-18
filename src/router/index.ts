@@ -5,6 +5,7 @@ import LoginView from '@/views/LoginView.vue';
 import DashboardView from '@/views/DashboardView.vue';
 import PersonsView from '@/views/PersonsView.vue';
 import ImageView from '@/views/ImageView.vue';
+import BusquedaView from '@/views/BusquedaView.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -32,6 +33,11 @@ const router = createRouter({
       path: '/imagenes',
       name: 'imagenes',
       component: ImageView,
+    },
+    {
+      path: '/detecciones',
+      name: 'busqueda',
+      component: BusquedaView,
     }
   ]
 });
