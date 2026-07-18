@@ -79,20 +79,22 @@ const authenticateUser = async () => {
   }
 
   try {
-    // LLAMADA REAL A TU FASTAPI
+    
     const response = await api.post('/login/biometric', {
       image: imageData
     });
     
-    // Asumimos que FastAPI nos devuelve el JSON de Node-RED con el token
-    const token = response.data.access_token;
     
-    // Guardamos el token y nos vamos al Dashboard
+    const token = response.data.access_token;
+   // const user = response.data.user;
+    
     localStorage.setItem('token', token);
+    
+
     router.push('/');
     
   } catch (error) {
-    // Si falla, mostramos el error que mandó el backend o uno genérico
+    
     if (error.response && error.response.data && error.response.data.detail) {
         errorMessage.value = error.response.data.detail;
     } else {

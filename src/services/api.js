@@ -11,8 +11,7 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
-    // Acá interceptamos cada petición antes de que salga hacia el backend.
-    // Buscamos el token de Keycloak que guardaste en el login y se lo pegamos a la cabecera.
+    
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
