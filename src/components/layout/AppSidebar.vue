@@ -59,30 +59,21 @@ const menu = [
     to: "/detecciones",
   },
   {
-    title: "Consultas",
-    icon: "mdi-magnify",
-    to: "/consultas",
-  },
-  {
     title: "Personas",
     icon: "mdi-account-group",
     to: "/personas",
   },
   {
-    title: "Modelos",
-    icon: "mdi-brain", // Un ícono de cerebro queda genial para IA/Modelos
+    title: "Mapa de detecciones",
+    icon: "mdi-map",
     to: "/modelos",
-  },
+  },  
   {
     title: "Subir Imagen",
     icon: "mdi-cloud-upload",
     to: "/imagenes",
   },
-  {
-    title: "Monitoreo",
-    icon: "mdi-monitor-dashboard",
-    to: "/monitoreo",
-  },
+
   {
     title: "Configuración",
     icon: "mdi-cog",
@@ -117,9 +108,7 @@ const menu = [
     </div>
 
     <div class="user">
-      <v-avatar size="40">
-        <v-img src="https://i.pravatar.cc/100"></v-img>
-      </v-avatar>
+      
 
       <Transition name="fade">
         <div

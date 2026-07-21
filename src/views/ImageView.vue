@@ -361,6 +361,134 @@
     </v-snackbar>
 
   </div>
+
+  <!-- ===================================================== -->
+    <!-- MODAL DE RESULTADOS -->
+    <!-- ===================================================== -->
+    <v-dialog v-model="modalResultado" max-width="1200" :scrim-opacity="0.7">
+      <v-card class="result-modal">
+
+        <div class="result-modal__accent-bar"></div>
+
+        <div class="result-modal__header">
+          <div class="result-modal__header-left">
+            <div class="result-modal__success-icon">
+              <v-icon size="22" color="white">mdi-check-decagram</v-icon>
+            </div>
+            <div>
+              <h3 class="result-modal__title">Análisis Completado</h3>
+              <p class="result-modal__subtitle">Se detectaron {{ resultadoInferencia?.totalDetecciones }} objetos en la imagen</p>
+            </div>
+          </div>
+          <v-btn icon variant="text" class="result-modal__close" @click="cerrarModal">
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </div>
+
+        <v-card-text class="result-modal__body" v-if="resultadoInferencia">
+          <v-row>
+
+            <v-col cols="12" md="8">
+              <div class="result-modal__image-container">
+                <img
+                  :src="resultadoInferencia.imageURL"
+                  alt="Resultado"
+                  class="result-modal__image"
+                  @load="alCargarImagenResultante"
+                />
+
+                <div
+                  v-for="(det, index) in resultadoInferencia.detecciones"
+                  :key="index"
+                  class="result-modal__bbox"
+                  :style="calcularEstiloCaja(det.bbox)"
+                >
+                  <div class="result-modal__bbox-label">
+                    {{ det.class_name }} {{ (det.confidence * 100).toFixed(1) }}%
+                  </div>
+                </div>
+              </div>
+            </v-col>
+
+            <v-col cols="12" md="4">
+              <div class="result-sidebar">
+
+                <div class="result-sidebar__meta-grid">
+                  <div class="result-sidebar__meta-card">
+                    <div class="result-sidebar__meta-icon result-sidebar__meta-icon--blue">
+                      <v-icon size="18" color="white">mdi-identifier</v-icon>
+                    </div>
+                    <div>
+                      <span class="result-sidebar__meta-label">Fotograma</span>
+                      <span class="result-sidebar__meta-value">{{ resultadoInferencia.frameId }}</span>
+                    </div>
+                  </div>
+                  <div class="result-sidebar__meta-card">
+                    <div class="result-sidebar__meta-icon result-sidebar__meta-icon--purple">
+                      <v-icon size="18" color="white">mdi-robot</v-icon>
+                    </div>
+                    <div>
+                      <span class="result-sidebar__meta-label">Modelo</span>
+                      <span class="result-sidebar__meta-value">{{ resultadoInferencia.modelId.toUpperCase() }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="result-sidebar__total">
+                  <div class="result-sidebar__total-number">
+                    {{ resultadoInferencia.totalDetecciones }}
+                  </div>
+                  <div class="result-sidebar__total-label">Detecciones Totales</div>
+                </div>
+
+                <div class="result-sidebar__divider"></div>
+
+                <div class="result-sidebar__list-header">
+                  <span>Clase detectada</span>
+                  <span>Confianza</span>
+                </div>
+
+                <div class="result-sidebar__list">
+                  <div
+                    v-for="(det, idx) in resultadoInferencia.detecciones"
+                    :key="idx"
+                    class="result-sidebar__detection"
+                  >
+                    <div class="result-sidebar__detection-info">
+                      <div
+                        class="result-sidebar__detection-dot"
+                        :class="{
+                          'result-sidebar__detection-dot--high': det.confidence >= 0.8,
+                          'result-sidebar__detection-dot--mid': det.confidence >= 0.5 && det.confidence < 0.8,
+                          'result-sidebar__detection-dot--low': det.confidence < 0.5
+                        }"
+                      ></div>
+                      <span class="result-sidebar__detection-name">{{ det.class_name }}</span>
+                    </div>
+                    <div class="result-sidebar__detection-bar-wrapper">
+                      <div class="result-sidebar__detection-bar">
+                        <div
+                          class="result-sidebar__detection-bar-fill"
+                          :class="{
+                            'result-sidebar__detection-bar-fill--high': det.confidence >= 0.8,
+                            'result-sidebar__detection-bar-fill--mid': det.confidence >= 0.5 && det.confidence < 0.8,
+                            'result-sidebar__detection-bar-fill--low': det.confidence < 0.5
+                          }"
+                          :style="{ width: (det.confidence * 100) + '%' }"
+                        ></div>
+                      </div>
+                      <span class="result-sidebar__detection-pct">{{ (det.confidence * 100).toFixed(0) }}%</span>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </v-col>
+
+          </v-row>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
 </template>
 
 <script setup>
@@ -377,7 +505,9 @@ const router = useRouter(); // <-- Inicializamos el router
 const fileInput = ref(null);
 const isDragging = ref(false);
 const isProcessing = ref(false);
-
+const modalResultado = ref(false);
+const resultadoInferencia = ref(null);
+const dimensionesImagen = ref({ width: 0, height: 0 });
 const imagenSeleccionada = ref(null);
 const imagenUrl = ref(null);
 
@@ -394,6 +524,41 @@ const config = ref({
 });
 
 const modelosDisponibles = ref([]);
+
+
+/*===============================
+RESULTADO
+==================================*/ 
+const calcularEstiloCaja = (bbox) => {
+  if (!dimensionesImagen.value.width) return { display: 'none' };
+  
+  const widthPerc = ((bbox.x2 - bbox.x1) / dimensionesImagen.value.width) * 100;
+  const heightPerc = ((bbox.y2 - bbox.y1) / dimensionesImagen.value.height) * 100;
+  const leftPerc = (bbox.x1 / dimensionesImagen.value.width) * 100;
+  const topPerc = (bbox.y1 / dimensionesImagen.value.height) * 100;
+
+  return {
+    position: 'absolute',
+    left: `${leftPerc}%`,
+    top: `${topPerc}%`,
+    width: `${widthPerc}%`,
+    height: `${heightPerc}%`,
+    border: '3px solid #2563eb',
+    backgroundColor: 'rgba(37, 99, 235, 0.15)',
+    boxSizing: 'border-box'
+  };
+};
+
+const alCargarImagenResultante = (event) => {
+  dimensionesImagen.value = {
+    width: event.target.naturalWidth,
+    height: event.target.naturalHeight
+  };
+};
+
+const cerrarModal = () => {
+  modalResultado.value = false;
+};
 
 /* ==========================================================
  * ALERTAS
@@ -510,20 +675,27 @@ const procesarImagen = async () => {
     isProcessing.value = true;
     const formData = new FormData();
 
-    // Las claves ("image", "modelId", etc.) deben coincidir EXACTAMENTE 
+    
     // con lo que espera recibir tu backend en el controlador.
     formData.append("image", imagenSeleccionada.value);
     formData.append("modelId", config.value.modeloId);
 
-    if (config.value.lat) formData.append("latitude", config.value.lat);
-    if (config.value.lng) formData.append("longitude", config.value.lng);
+    const metadata = {};
+    if (config.value.lat) metadata.latitud = config.value.lat;
+    if (config.value.lng) metadata.longitud = config.value.lng;
+    if (Object.keys(metadata).length > 0) {
+      formData.append("metadata", JSON.stringify(metadata));
+    }
 
-    const response = await api.post("/detections", formData, {
+    const response = await api.post("/detection", formData, {
       // Necesario para que Axios envíe correctamente archivos FormData
       headers: {
         'Content-Type': 'multipart/form-data'
       }
     });
+
+  resultadoInferencia.value = response.data;
+    modalResultado.value = true;
 
     mostrarAlerta("Imagen procesada correctamente");
     
@@ -979,6 +1151,559 @@ onBeforeUnmount(() => {
 
 
 /* ==========================================================
+   MODAL DE RESULTADOS
+========================================================== */
+
+.result-modal{
+
+    background:#0f172a!important;
+
+    border:1px solid rgba(255,255,255,.08)!important;
+
+    border-radius:20px!important;
+
+    overflow:hidden;
+
+}
+
+.result-modal__accent-bar{
+
+    height:4px;
+
+    background:linear-gradient(90deg, #10b981, #3b82f6, #8b5cf6);
+
+}
+
+.result-modal__header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding:24px 28px;
+
+    border-bottom:1px solid rgba(255,255,255,.06);
+
+}
+
+.result-modal__header-left{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:16px;
+
+}
+
+.result-modal__success-icon{
+
+    width:44px;
+
+    height:44px;
+
+    border-radius:12px;
+
+    background:linear-gradient(135deg, #10b981, #059669);
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    animation: modal-icon-pulse 2s ease-in-out infinite;
+
+}
+
+@keyframes modal-icon-pulse{
+
+    0%, 100%{ box-shadow: 0 0 0 0 rgba(16,185,129,.4); }
+
+    50%{ box-shadow: 0 0 0 10px rgba(16,185,129,0); }
+
+}
+
+.result-modal__title{
+
+    margin:0;
+
+    font-size:20px;
+
+    font-weight:700;
+
+    color:white;
+
+}
+
+.result-modal__subtitle{
+
+    margin:2px 0 0;
+
+    font-size:13px;
+
+    color:#94a3b8;
+
+}
+
+.result-modal__close{
+
+    color:#94a3b8!important;
+
+    opacity:.7;
+
+    transition:.2s;
+
+}
+
+.result-modal__close:hover{
+
+    opacity:1;
+
+    color:white!important;
+
+}
+
+.result-modal__body{
+
+    padding:28px;
+
+}
+
+/* -- Imagen -- */
+
+.result-modal__image-container{
+
+    position:relative;
+
+    border-radius:14px;
+
+    overflow:hidden;
+
+    background:#0b1220;
+
+    border:1px solid rgba(59,130,246,.25);
+
+    box-shadow:0 0 30px rgba(59,130,246,.08);
+
+}
+
+.result-modal__image{
+
+    width:100%;
+
+    height:auto;
+
+    display:block;
+
+}
+
+/* -- Bounding boxes -- */
+
+.result-modal__bbox{
+
+    transition:.2s;
+
+}
+
+.result-modal__bbox-label{
+
+    position:absolute;
+
+    top:-26px;
+
+    left:-1px;
+
+    background:rgba(37,99,235,.92);
+
+    backdrop-filter:blur(6px);
+
+    color:white;
+
+    padding:3px 10px;
+
+    font-size:11px;
+
+    font-weight:600;
+
+    border-radius:6px 6px 0 0;
+
+    white-space:nowrap;
+
+    letter-spacing:.2px;
+
+    border:1px solid rgba(96,165,250,.3);
+
+    border-bottom:none;
+
+}
+
+/* -- Sidebar derecha -- */
+
+.result-sidebar{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:16px;
+
+}
+
+.result-sidebar__meta-grid{
+
+    display:grid;
+
+    grid-template-columns:1fr 1fr;
+
+    gap:10px;
+
+}
+
+.result-sidebar__meta-card{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+    padding:14px;
+
+    background:rgba(255,255,255,.03);
+
+    border:1px solid rgba(255,255,255,.06);
+
+    border-radius:12px;
+
+    transition:.2s;
+
+}
+
+.result-sidebar__meta-card:hover{
+
+    background:rgba(255,255,255,.05);
+
+    border-color:rgba(255,255,255,.1);
+
+}
+
+.result-sidebar__meta-icon{
+
+    width:34px;
+
+    height:34px;
+
+    border-radius:9px;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    flex-shrink:0;
+
+}
+
+.result-sidebar__meta-icon--blue{
+
+    background:linear-gradient(135deg, #2563eb, #3b82f6);
+
+}
+
+.result-sidebar__meta-icon--purple{
+
+    background:linear-gradient(135deg, #7c3aed, #8b5cf6);
+
+}
+
+.result-sidebar__meta-label{
+
+    display:block;
+
+    font-size:11px;
+
+    color:#94a3b8;
+
+    text-transform:uppercase;
+
+    letter-spacing:.5px;
+
+    font-weight:500;
+
+}
+
+.result-sidebar__meta-value{
+
+    display:block;
+
+    font-size:14px;
+
+    font-weight:700;
+
+    color:white;
+
+    margin-top:2px;
+
+    word-break:break-all;
+
+}
+
+/* -- Total -- */
+
+.result-sidebar__total{
+
+    text-align:center;
+
+    padding:20px;
+
+    background:linear-gradient(135deg, rgba(16,185,129,.1), rgba(16,185,129,.03));
+
+    border:1px solid rgba(16,185,129,.15);
+
+    border-radius:14px;
+
+}
+
+.result-sidebar__total-number{
+
+    font-size:40px;
+
+    font-weight:800;
+
+    color:#10b981;
+
+    line-height:1;
+
+}
+
+.result-sidebar__total-label{
+
+    font-size:12px;
+
+    color:#94a3b8;
+
+    margin-top:6px;
+
+    text-transform:uppercase;
+
+    letter-spacing:.5px;
+
+    font-weight:500;
+
+}
+
+.result-sidebar__divider{
+
+    height:1px;
+
+    background:rgba(255,255,255,.06);
+
+    margin:4px 0;
+
+}
+
+/* -- Lista de detecciones -- */
+
+.result-sidebar__list-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    font-size:11px;
+
+    text-transform:uppercase;
+
+    letter-spacing:.5px;
+
+    color:#64748b;
+
+    font-weight:600;
+
+    padding:0 4px;
+
+}
+
+.result-sidebar__list{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:10px;
+
+    max-height:280px;
+
+    overflow-y:auto;
+
+    padding:2px 4px;
+
+}
+
+.result-sidebar__detection{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:6px;
+
+    padding:10px 12px;
+
+    background:rgba(255,255,255,.02);
+
+    border:1px solid rgba(255,255,255,.04);
+
+    border-radius:10px;
+
+    transition:.2s;
+
+}
+
+.result-sidebar__detection:hover{
+
+    background:rgba(255,255,255,.04);
+
+    border-color:rgba(255,255,255,.08);
+
+}
+
+.result-sidebar__detection-info{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:8px;
+
+}
+
+.result-sidebar__detection-dot{
+
+    width:8px;
+
+    height:8px;
+
+    border-radius:50%;
+
+    flex-shrink:0;
+
+}
+
+.result-sidebar__detection-dot--high{
+
+    background:#10b981;
+
+    box-shadow:0 0 6px rgba(16,185,129,.5);
+
+}
+
+.result-sidebar__detection-dot--mid{
+
+    background:#f59e0b;
+
+    box-shadow:0 0 6px rgba(245,158,11,.5);
+
+}
+
+.result-sidebar__detection-dot--low{
+
+    background:#ef4444;
+
+    box-shadow:0 0 6px rgba(239,68,68,.5);
+
+}
+
+.result-sidebar__detection-name{
+
+    font-size:13px;
+
+    font-weight:600;
+
+    color:white;
+
+    text-transform:capitalize;
+
+}
+
+.result-sidebar__detection-bar-wrapper{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+}
+
+.result-sidebar__detection-bar{
+
+    flex:1;
+
+    height:6px;
+
+    background:rgba(255,255,255,.06);
+
+    border-radius:20px;
+
+    overflow:hidden;
+
+}
+
+.result-sidebar__detection-bar-fill{
+
+    height:100%;
+
+    border-radius:20px;
+
+    animation: bar-fill-in .6s ease-out;
+
+}
+
+@keyframes bar-fill-in{
+
+    from{ width:0!important; }
+
+}
+
+.result-sidebar__detection-bar-fill--high{
+
+    background:linear-gradient(90deg, #10b981, #34d399);
+
+}
+
+.result-sidebar__detection-bar-fill--mid{
+
+    background:linear-gradient(90deg, #f59e0b, #fbbf24);
+
+}
+
+.result-sidebar__detection-bar-fill--low{
+
+    background:linear-gradient(90deg, #ef4444, #f87171);
+
+}
+
+.result-sidebar__detection-pct{
+
+    font-size:13px;
+
+    font-weight:700;
+
+    min-width:36px;
+
+    text-align:right;
+
+    color:#60a5fa;
+
+}
+
+
+/* ==========================================================
    RESPONSIVE
 ========================================================== */
 
@@ -1032,6 +1757,24 @@ onBeforeUnmount(() => {
         align-items:flex-start;
 
         gap:18px;
+
+    }
+
+    .result-modal__body{
+
+        padding:18px;
+
+    }
+
+    .result-modal__meta-grid{
+
+        grid-template-columns:1fr;
+
+    }
+
+    .result-sidebar__total-number{
+
+        font-size:32px;
 
     }
 

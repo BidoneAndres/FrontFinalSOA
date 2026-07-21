@@ -17,9 +17,7 @@
 
         <span class="user-name">{{ userName }}</span>
 
-        <v-avatar>
-            <v-img src="https://i.pravatar.cc/100"/>
-        </v-avatar>
+        
     </div>
 </div>
 </template>
