@@ -17,17 +17,23 @@
 
         <span class="user-name">{{ userName }}</span>
 
-        
+        <v-btn
+            icon="mdi-logout"
+            variant="text"
+            @click="logout"
+        />
     </div>
 </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, inject } from 'vue';
+import { useRouter } from 'vue-router';
 import { useLayoutStore } from "@/stores/layout";
 
 const layout = useLayoutStore();
-
+const router = useRouter();
+const keycloak = inject("keycloak");
 
 const userName = ref("Invitado");
 
@@ -44,21 +50,24 @@ const parseJwt = (token) => {
     }
 };
 
+const logout = () => {
+    localStorage.removeItem('token');
+    if (keycloak && keycloak.authenticated) {
+        keycloak.logout({ redirectUri: window.location.origin });
+    } else {
+        router.push('/');
+    }
+};
+
 onMounted(() => {
-    
-    const token = localStorage.getItem('token'); 
-    
+    const token = localStorage.getItem('token');
     if (token) {
-        
         const decodedToken = parseJwt(token);
-        
         if (decodedToken) {
-            
             userName.value = decodedToken.name || decodedToken.preferred_username || "Usuario";
         }
     }
 });
-
 </script>
 
 <style scoped>

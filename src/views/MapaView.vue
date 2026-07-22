@@ -79,19 +79,19 @@
 
               <div class="popup-coords">
                 <v-icon size="14" color="#94a3b8">mdi-map-marker</v-icon>
-                <span>{{ Number(det.latitud).toFixed(4) }}, {{ Number(det.longitud).toFixed(4) }}</span>
+                <span>{{ det.latitud?.toFixed(4) }}, {{ det.longitud?.toFixed(4) }}</span>
               </div>
 
               <div class="popup-divider"></div>
 
               <div class="popup-section-title">
                 <v-icon size="14" color="#10b981">mdi-check-decagram</v-icon>
-                <span>{{ det.detecciones?.length || 0 }} detecciones</span>
+                <span>{{ det.detections?.length || 0 }} detecciones</span>
               </div>
 
               <div class="popup-classes">
                 <span
-                  v-for="(clase, idx) in clasesUnicas(det.detecciones)"
+                  v-for="(clase, idx) in clasesUnicas(det.detections)"
                   :key="idx"
                   class="popup-class-chip"
                 >
@@ -288,7 +288,7 @@ const markers = computed(() => {
 
 const totalDetecciones = computed(() => {
   return markers.value.reduce(
-    (acc, m) => acc + (m.detecciones?.length || 0),
+    (acc, m) => acc + (m.detections?.length || 0),
     0
   );
 });
@@ -305,8 +305,22 @@ const mostrarAlerta = (texto, color = "success") => {
 const cargarDetecciones = async () => {
   cargando.value = true;
   try {
-    const { data } = await apiChaco.get("/detecciones");
-    detecciones.value = Array.isArray(data) ? data : [];
+    const { data } = await api.get("/frames/search", {
+      params: {
+        lat_min: -90,
+        lat_max: 90,
+        lon_min: -180,
+        lon_max: 180,
+      },
+    });
+    detecciones.value = (Array.isArray(data) ? data : []).map(d => ({
+      ...d,
+      metadata: {
+        ...d.metadata,
+        latitud: d.metadata?.latitud != null ? Number(d.metadata.latitud) : null,
+        longitud: d.metadata?.longitud != null ? Number(d.metadata.longitud) : null,
+      }
+    }));
 
     mostrarAlerta(
       markers.value.length
@@ -489,6 +503,11 @@ onBeforeUnmount(() => {
 /* ==========================================================
    MAPA
 ========================================================== */
+
+.map-container :deep(.leaflet-marker-icon) {
+  background: none !important;
+  border: none !important;
+}
 
 .map-container {
   border-radius: 18px;

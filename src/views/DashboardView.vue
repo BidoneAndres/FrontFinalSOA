@@ -54,7 +54,7 @@
               :touch-zoom="false"
               :double-click-zoom="false"
               :keyboard="false"
-              class="mini-map"
+              style="height: 320px; width: 100%;"
             >
               <l-tile-layer
                 url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
@@ -67,10 +67,12 @@
                 :lat-lng="[det.latitud, det.longitud]"
               >
                 <l-icon
-                  :icon-size="[20, 26]"
-                  :icon-anchor="[10, 26]"
+                  :icon-size="[26, 34]"
+                  :icon-anchor="[13, 34]"
                 >
-                  <div class="mini-marker"></div>
+                  <div class="custom-marker">
+                    <v-icon size="14" color="white">mdi-crosshairs-gps</v-icon>
+                  </div>
                 </l-icon>
               </l-marker>
             </l-map>
@@ -140,11 +142,11 @@
               </div>
               <div class="last-detection__row" v-if="ultimaDeteccion.metadata?.latitud">
                 <v-icon size="14" color="#94a3b8">mdi-map-marker</v-icon>
-                <span>{{ Number(ultimaDeteccion.metadata.latitud).toFixed(4) }}, {{ Number(ultimaDeteccion.metadata.longitud).toFixed(4) }}</span>
+                <span>{{ ultimaDeteccion.metadata?.latitud?.toFixed(4) }}, {{ ultimaDeteccion.metadata?.longitud?.toFixed(4) }}</span>
               </div>
               <div class="last-detection__classes">
                 <span
-                  v-for="(c, i) in clasesUnicas(ultimaDeteccion.detecciones)"
+                  v-for="(c, i) in clasesUnicas(ultimaDeteccion.detections)"
                   :key="i"
                   class="class-chip"
                 >{{ c }}</span>
@@ -171,13 +173,13 @@
               <div class="recent-item__left">
                 <div class="recent-item__index">{{ idx + 1 }}</div>
                 <div>
-                  <div class="recent-item__sensor">{{ det.metadata?.sensor || 'N/A' }}</div>
+                  <div class="recent-item__sensor">{{ det.frameId }}</div>
                   <div class="recent-item__date">{{ parsearFecha(det.frameId) }}</div>
                 </div>
               </div>
               <div class="recent-item__right">
                 <v-chip size="small" color="primary" variant="tonal">
-                  {{ det.detecciones?.length || 0 }} obj.
+                  {{ det.detections?.length || 0 }} obj.
                 </v-chip>
               </div>
             </div>
@@ -264,12 +266,12 @@ const markers = computed(() => {
 
 const kpis = computed(() => {
   const total = detecciones.value.reduce(
-    (acc, d) => acc + (d.detecciones?.length || 0),
+    (acc, d) => acc + (d.detections?.length || 0),
     0
   );
   const classes = new Set();
   detecciones.value.forEach((d) => {
-    (d.detecciones || []).forEach((det) => classes.add(det.class_name));
+    (d.detections || []).forEach((det) => classes.add(det.class_name));
   });
 
     return [
@@ -286,7 +288,7 @@ const kpis = computed(() => {
 const clasesPorCantidad = computed(() => {
   const map = {};
   detecciones.value.forEach((d) => {
-    (d.detecciones || []).forEach((det) => {
+    (d.detections || []).forEach((det) => {
       map[det.class_name] = (map[det.class_name] || 0) + 1;
     });
   });
@@ -373,8 +375,22 @@ const mostrarAlerta = (texto, color = "success") => {
 const cargarDatos = async () => {
   cargando.value = true;
   try {
-    const { data } = await apiChaco.get("/detecciones");
-    detecciones.value = Array.isArray(data) ? data : [];
+    const { data } = await api.get("/frames/search", {
+      params: {
+        lat_min: -90,
+        lat_max: 90,
+        lon_min: -180,
+        lon_max: 180,
+      },
+    });
+    detecciones.value = (Array.isArray(data) ? data : []).map(d => ({
+      ...d,
+      metadata: {
+        ...d.metadata,
+        latitud: d.metadata?.latitud != null ? Number(d.metadata.latitud) : null,
+        longitud: d.metadata?.longitud != null ? Number(d.metadata.longitud) : null,
+      }
+    }));
     mostrarAlerta(
       detecciones.value.length
         ? `${detecciones.value.length} fotogramas cargados`
@@ -392,22 +408,25 @@ const cargarDatos = async () => {
 onMounted(async () => {
   await cargarDatos();
   await nextTick();
+
+console.log("Leaflet:", miniMapRef.value?.leafletObject);
+console.log("Markers:", markers.value);
+  await nextTick();
   setTimeout(() => {
     if (miniMapRef.value?.leafletObject) {
       miniMapRef.value.leafletObject.invalidateSize();
+      const map = miniMapRef.value.leafletObject;
+
+    console.log("Tamaño:", map.getSize());
+    console.log("Centro:", map.getCenter());
+    console.log("Zoom:", map.getZoom());
+      
     }
   }, 300);
 });
 
 onBeforeUnmount(() => {
-  if (miniMapRef.value?.leafletObject) {
-    miniMapRef.value.leafletObject.closePopup();
-    miniMapRef.value.leafletObject.remove();
-  }
-  nextTick(() => {
-    document.querySelectorAll('.v-overlay-container').forEach(el => el.remove());
-    document.documentElement.classList.remove('v-overlay--scroll-blocked');
-  });
+  
 });
 </script>
 
@@ -553,13 +572,21 @@ onBeforeUnmount(() => {
   height: 320px;
 }
 
-.mini-marker {
-  width: 10px;
-  height: 10px;
-  background: #3b82f6;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.5);
-  box-shadow: 0 0 8px rgba(59, 130, 246, 0.6);
+.custom-marker {
+  width: 26px;
+  height: 34px;
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+}
+
+.custom-marker .v-icon {
+  transform: rotate(45deg);
 }
 
 /* ==========================================================
@@ -815,6 +842,11 @@ onBeforeUnmount(() => {
   .kpi-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+}
+
+.mini-map-container :deep(.leaflet-marker-icon) {
+  background: none !important;
+  border: none !important;
 }
 
 @media (max-width: 600px) {

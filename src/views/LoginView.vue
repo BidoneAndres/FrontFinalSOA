@@ -1,7 +1,8 @@
 <script setup>
 import { ref, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
-import api from '@/services/api'; // Importamos tu cliente configurado
+import api from '@/services/api';
+import keycloak from '@/router/keycloak';
 
 const videoRef = ref(null);
 const canvasRef = ref(null);
@@ -105,6 +106,12 @@ const authenticateUser = async () => {
   }
 };
 
+const loginWithKeycloak = () => {
+  keycloak.login({
+    redirectUri: window.location.origin
+  });
+};
+
 // Solo detenemos la cámara al salir
 onBeforeUnmount(() => {
   stopCamera();
@@ -195,6 +202,23 @@ onBeforeUnmount(() => {
           <v-icon left class="mr-1">mdi-camera</v-icon> Usar cámara web
         </v-btn>
       </div>
+
+      <div class="keycloak-divider">
+        <span>o</span>
+      </div>
+
+      <v-btn
+        block
+        variant="outlined"
+        color="#94A3B8"
+        size="large"
+        class="keycloak-btn"
+        @click="loginWithKeycloak"
+      >
+        <v-icon left class="mr-2">mdi-key</v-icon>
+        Iniciar sesión de otra forma
+      </v-btn>
+
       <Transition name="fade">
         <div v-if="errorMessage" class="error-msg mt-4">
           <v-icon size="20" class="mr-1">mdi-alert-circle-outline</v-icon>
@@ -361,6 +385,34 @@ video.camera-feed {
   align-items: center;
   border: 1px solid rgba(239, 68, 68, 0.2);
   width: 100%;
+}
+
+.keycloak-divider {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin: 20px 0;
+  gap: 12px;
+}
+
+.keycloak-divider::before,
+.keycloak-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #334155;
+}
+
+.keycloak-divider span {
+  color: #64748B;
+  font-size: 0.85rem;
+}
+
+.keycloak-btn {
+  border-radius: 10px;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
 }
 
 .fade-enter-active,
