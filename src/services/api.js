@@ -2,7 +2,7 @@ import axios from 'axios';
 
 
 const api = axios.create({
-  baseURL: 'http://10.35.237.38:5000', 
+  baseURL: 'https://cernikiw3.chickenkiller.com/andi',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -11,7 +11,7 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
-    
+
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -31,16 +31,16 @@ api.interceptors.response.use(
   },
   (error) => {
     // Atajamos errores globales para que no crashee la app
-    
+
     // Si el backend te patea porque el token expiró o es inválido (Error 401)
     if (error.response && error.response.status === 401) {
       console.error('Acceso denegado o token expirado. Debes iniciar sesión nuevamente.');
-      
+
       // Opcional: limpiar el token viejo y mandar al usuario a la pantalla de login
       // localStorage.removeItem('token');
-      // window.location.href = '/login'; 
+      // window.location.href = '/login';
     }
-    
+
     // Si el backend de Python o Node-RED se caen (Error 500)
     if (error.response && error.response.status === 500) {
       console.error('Error interno del servidor en el backend.');
