@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
-import api from '@/services/api';
+import apiChaco from '@/services/apiChaco';
 import keycloak from '@/router/keycloak';
 
 const videoRef = ref(null);
@@ -81,7 +81,7 @@ const authenticateUser = async () => {
 
   try {
     
-    const response = await api.post('/login/biometric', {
+    const response = await apiChaco.post('/nodo-login-facial-vivo', {
       image: imageData
     });
     
