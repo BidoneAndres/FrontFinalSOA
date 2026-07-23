@@ -62,6 +62,7 @@ const menu = [
     title: "Personas",
     icon: "mdi-account-group",
     to: "/personas",
+    adminOnly: true,
   },
   {
     title: "Mapa de detecciones",
@@ -77,6 +78,7 @@ const menu = [
     title: "Subir Imagen",
     icon: "mdi-cloud-upload",
     to: "/imagenes",
+    operatorOrAdminOnly: true,
   },
 
   {
@@ -85,6 +87,14 @@ const menu = [
     to: "/configuracion",
   }
 ];
+
+const filteredMenu = computed(() => {
+  return menu.filter(item => {
+    if (item.adminOnly) return userRole.value === "Administrador";
+    if (item.operatorOrAdminOnly) return userRole.value === "Administrador" || userRole.value === "Operador";
+    return true;
+  });
+});
 </script>
 
 <template>
@@ -105,7 +115,7 @@ const menu = [
 
     <div class="menu">
       <SidebarItem
-        v-for="item in menu"
+        v-for="item in filteredMenu"
         :key="item.title"
         v-bind="item"
         :collapsed="collapsed"
