@@ -176,7 +176,7 @@
                 <div class="thumbnail">
 
                     <img
-                        :src="rewriteSeaweedUrl(frame.imageURL)"
+                        :src="getFrameUrl(frame.frameId)"
                         :alt="frame.frameId"
                         @error="imagenError"
                     />

@@ -79,12 +79,6 @@ const menu = [
     icon: "mdi-cloud-upload",
     to: "/imagenes",
     operatorOrAdminOnly: true,
-  },
-
-  {
-    title: "Configuración",
-    icon: "mdi-cog",
-    to: "/configuracion",
   }
 ];
 
