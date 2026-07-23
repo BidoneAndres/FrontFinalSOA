@@ -22,10 +22,18 @@ app.config.globalProperties.$keycloak = keycloak;
 app.provide("keycloak", keycloak);
 
 keycloak.init({
-  onLoad: "none",
+  onLoad: "check-sso",
   checkLoginIframe: false,
   pkceMethod: "S256",
-  redirectUri: window.location.origin,
-}).then(() => {
-  app.mount("#app");
-});
+})
+  .then(async (authenticated) => {
+    if (authenticated) {
+      localStorage.setItem("token", keycloak.token);
+      await router.push("/dashboard");
+    }
+    app.mount("#app");
+  })
+  .catch((error) => {
+    console.warn("Keycloak init failed:", error);
+    app.mount("#app");
+  });
