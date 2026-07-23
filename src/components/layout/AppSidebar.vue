@@ -66,8 +66,13 @@ const menu = [
   {
     title: "Mapa de detecciones",
     icon: "mdi-map",
+    to: "/mapa",
+  },
+  {
+    title: "Modelos IA",
+    icon: "mdi-robot",
     to: "/modelos",
-  },  
+  },
   {
     title: "Subir Imagen",
     icon: "mdi-cloud-upload",

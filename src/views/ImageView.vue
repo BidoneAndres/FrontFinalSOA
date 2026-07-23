@@ -181,25 +181,15 @@
             <div class="section-body">
 
               <v-select
-
                 v-model="config.modeloId"
-
                 :items="modelosDisponibles"
-
-                item-title="nombre"
-
+                item-title="filename"
                 item-value="id"
-
                 variant="outlined"
-
                 rounded="xl"
-
                 density="comfortable"
-
                 prepend-inner-icon="mdi-robot"
-
                 hide-details
-
               />
 
             </div>
@@ -391,7 +381,7 @@
             <v-col cols="12" md="8">
               <div class="result-modal__image-container">
                 <img
-                  :src="resultadoInferencia.imageURL"
+                  :src="imagenResultadoUrl"
                   alt="Resultado"
                   class="result-modal__image"
                   @load="alCargarImagenResultante"
@@ -492,9 +482,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import { useRouter } from "vue-router"; // <-- Importamos el router
 import api from "@/services/apiChaco.js";
+import { getFrameUrl } from "@/config/seaweed.js";
 
 const router = useRouter(); // <-- Inicializamos el router
 
@@ -529,6 +520,11 @@ const modelosDisponibles = ref([]);
 /*===============================
 RESULTADO
 ==================================*/ 
+const imagenResultadoUrl = computed(() => {
+  if (!resultadoInferencia.value?.frameId) return '';
+  return getFrameUrl(resultadoInferencia.value.frameId);
+});
+
 const calcularEstiloCaja = (bbox) => {
   if (!dimensionesImagen.value.width) return { display: 'none' };
   
@@ -580,12 +576,12 @@ const cargarModelos = async () => {
   try {
     // Llamada REAL a tu backend. 
     // Asegurate de que la ruta "/models" sea la correcta en tu API.
-    const { data } = await api.get("/models");
+    const { data } = await api.get("/detections/models");
+    
     
     // Si tu backend devuelve un formato distinto, mapealo acá. 
     // Esto asume que devuelve un array de objetos con 'id' y 'nombre'.
-    modelosDisponibles.value = data;
-
+    modelosDisponibles.value = data.models;
   } catch (e) {
     console.error("Error al cargar modelos:", e);
     mostrarAlerta("No se pudieron cargar los modelos", "error");

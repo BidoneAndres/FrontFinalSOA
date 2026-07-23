@@ -176,7 +176,7 @@
                 <div class="thumbnail">
 
                     <img
-                        :src="frame.imageURL"
+                        :src="rewriteSeaweedUrl(frame.imageURL)"
                         :alt="frame.frameId"
                         @error="imagenError"
                     />
@@ -448,6 +448,7 @@
 import { ref, computed } from "vue";
 import api from "@/services/api.js";
 import apiChaco from "@/services/apiChaco.js";
+import { getFrameUrl, rewriteSeaweedUrl } from "@/config/seaweed.js";
 
 /* ==========================================================
  * ESTADOS
@@ -586,8 +587,7 @@ const abrirModalDeteccion = async (frame) => {
     const { data } = await apiChaco.get(`/get-detection/${frame.frameId}`);
     resultadoInferencia.value = Array.isArray(data) ? data[0] : data;
 
-    const imageBaseURL = api.defaults.baseURL || "http://localhost:8000";
-    imagenModalUrl.value = `${imageBaseURL}/get-frame/${frame.frameId}`;
+    imagenModalUrl.value = getFrameUrl(frame.frameId);
 
     dimensionesImagen.value = { width: 0, height: 0 };
     modalResultado.value = true;

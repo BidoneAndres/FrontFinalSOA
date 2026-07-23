@@ -41,9 +41,15 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/mapa',
+      name: 'mapa',
+      component: () => import('@/views/MapaView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
       path: '/modelos',
       name: 'modelos',
-      component: () => import('@/views/MapaView.vue'),
+      component: () => import('@/views/ModelosView.vue'),
       meta: { requiresAuth: true }
     }
   ]

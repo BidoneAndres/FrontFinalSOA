@@ -254,6 +254,7 @@
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from "vue";
 import api from "@/services/api.js";
 import apiChaco from "@/services/apiChaco.js";
+import { getFrameUrl } from "@/config/seaweed.js";
 import "leaflet/dist/leaflet.css";
 import { LMap, LTileLayer, LMarker, LIcon, LPopup } from "@vue-leaflet/vue-leaflet";
 
@@ -372,8 +373,7 @@ const abrirModalDeteccion = async (det) => {
     const { data } = await apiChaco.get(`/get-detection/${det.frameId}`);
     resultadoInferencia.value = Array.isArray(data) ? data[0] : data;
 
-    const imageBaseURL = api.defaults.baseURL || "http://localhost:8000";
-    imagenModalUrl.value = `${imageBaseURL}/get-frame/${det.frameId}`;
+    imagenModalUrl.value = getFrameUrl(det.frameId);
 
     dimensionesImagen.value = { width: 0, height: 0 };
     modalResultado.value = true;

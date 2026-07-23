@@ -202,7 +202,7 @@
               <v-icon size="20">mdi-cloud-upload</v-icon>
               <span>Subir Imagen</span>
             </router-link>
-            <router-link to="/modelos" class="action-btn action-btn--green">
+            <router-link to="/mapa" class="action-btn action-btn--green">
               <v-icon size="20">mdi-map</v-icon>
               <span>Ver Mapa</span>
             </router-link>
@@ -227,6 +227,7 @@
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from "vue";
 import apiChaco from "@/services/apiChaco.js";
 import api from "@/services/api.js";
+import { getFrameUrl } from "@/config/seaweed.js";
 import "leaflet/dist/leaflet.css";
 import { LMap, LTileLayer, LMarker, LIcon } from "@vue-leaflet/vue-leaflet";
 
@@ -314,8 +315,7 @@ const ultimaDeteccion = computed(() => {
 
 const imagenUltima = computed(() => {
   if (!ultimaDeteccion.value) return "";
-  const baseURL = api.defaults.baseURL || "http://localhost:8000";
-  return `${baseURL}/get-frame/${ultimaDeteccion.value.frameId}`;
+  return getFrameUrl(ultimaDeteccion.value.frameId);
 });
 
 /* ==========================================================
