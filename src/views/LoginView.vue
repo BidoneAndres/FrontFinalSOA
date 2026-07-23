@@ -17,13 +17,13 @@ const uploadedImage = ref(null);
 // Iniciar la webcam
 const startCamera = async () => {
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ 
-      video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } } 
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }
     });
     if (videoRef.value) {
       videoRef.value.srcObject = stream;
       cameraActive.value = true;
-      uploadedImage.value = null; 
+      uploadedImage.value = null;
       errorMessage.value = '';
     }
   } catch (error) {
@@ -35,9 +35,9 @@ const startCamera = async () => {
 const stopCamera = () => {
   if (videoRef.value && videoRef.value.srcObject) {
     videoRef.value.srcObject.getTracks().forEach(track => track.stop());
-    videoRef.value.srcObject = null; 
+    videoRef.value.srcObject = null;
   }
-  cameraActive.value = false; 
+  cameraActive.value = false;
 };
 
 // Disparar input oculto
@@ -53,7 +53,7 @@ const handleFileUpload = (event) => {
   const reader = new FileReader();
   reader.onload = (e) => {
     uploadedImage.value = e.target.result;
-    stopCamera(); 
+    stopCamera();
     errorMessage.value = '';
   };
   reader.readAsDataURL(file);
@@ -62,7 +62,7 @@ const handleFileUpload = (event) => {
 // Autenticar
 const authenticateUser = async () => {
   if (!cameraActive.value && !uploadedImage.value) return;
-  
+
   isScanning.value = true;
   errorMessage.value = '';
 
@@ -80,22 +80,22 @@ const authenticateUser = async () => {
   }
 
   try {
-    
+
     const response = await apiChaco.post('/nodo-login-facial-vivo', {
       image: imageData
     });
-    
-    
+
+
     const token = response.data.access_token;
    // const user = response.data.user;
-    
+
     localStorage.setItem('token', token);
-    
+
 
     router.push('/');
-    
+
   } catch (error) {
-    
+
     if (error.response && error.response.data && error.response.data.detail) {
         errorMessage.value = error.response.data.detail;
     } else {
@@ -108,7 +108,7 @@ const authenticateUser = async () => {
 
 const loginWithKeycloak = () => {
   keycloak.login({
-    redirectUri: window.location.origin+'/web'
+    redirectUri: 'https://cernikiw3.chickenkiller.com/web/'
   });
 };
 
@@ -121,30 +121,30 @@ onBeforeUnmount(() => {
 <template>
   <div class="login-layout">
     <div class="login-card">
-      
-      <div class="header">
+
+      <div class="header">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
         <div class="logo-square">AI</div>
         <h2>VisionAI</h2>
       </div>
       <p class="subtitle">Acceso mediante biometría facial</p>
 
       <div class="camera-container" :class="{ 'scanning-active': isScanning }">
-        
-        <video 
-          ref="videoRef" 
-          autoplay 
-          playsinline 
-          muted 
+
+        <video
+          ref="videoRef"
+          autoplay
+          playsinline
+          muted
           class="camera-feed"
           v-show="cameraActive && !uploadedImage"
         ></video>
 
-        <img 
-          v-if="uploadedImage" 
-          :src="uploadedImage" 
-          class="camera-feed" 
+        <img
+          v-if="uploadedImage"
+          :src="uploadedImage"
+          class="camera-feed"
         />
-        
+
         <div v-if="!cameraActive && !uploadedImage" class="camera-placeholder">
           <v-icon size="40" color="#94A3B8" class="mb-2">mdi-webcam</v-icon>
           <span class="mb-4 text-center">La cámara está apagada</span>
@@ -172,31 +172,31 @@ onBeforeUnmount(() => {
       </v-btn>
 
       <div class="actions-row mt-4 gap-2">
-        <v-btn 
-          v-if="cameraActive && !uploadedImage" 
-          variant="text" 
-          size="small" 
-          class="fallback-btn text-red-400 hover:text-red-300" 
+        <v-btn
+          v-if="cameraActive && !uploadedImage"
+          variant="text"
+          size="small"
+          class="fallback-btn text-red-400 hover:text-red-300"
           @click="stopCamera"
         >
           <v-icon left class="mr-1">mdi-camera-off</v-icon> Apagar cámara
         </v-btn>
 
-        <v-btn 
-          v-if="!uploadedImage" 
-          variant="text" 
-          size="small" 
-          class="fallback-btn" 
+        <v-btn
+          v-if="!uploadedImage"
+          variant="text"
+          size="small"
+          class="fallback-btn"
           @click="triggerFileUpload"
         >
           <v-icon left class="mr-1">mdi-upload</v-icon> Subir foto manual
         </v-btn>
-        
-        <v-btn 
-          v-if="uploadedImage" 
-          variant="text" 
-          size="small" 
-          class="fallback-btn" 
+
+        <v-btn
+          v-if="uploadedImage"
+          variant="text"
+          size="small"
+          class="fallback-btn"
           @click="startCamera"
         >
           <v-icon left class="mr-1">mdi-camera</v-icon> Usar cámara web
@@ -244,7 +244,7 @@ onBeforeUnmount(() => {
   gap: 12px;
 }
 .text-red-400 {
-  color: #F87171 !important; 
+  color: #F87171 !important;
 }
 
 .login-card {
@@ -253,7 +253,7 @@ onBeforeUnmount(() => {
   border-radius: 16px;
   padding: 40px;
   width: 100%;
-  max-width: 440px; 
+  max-width: 440px;
   box-shadow: 0 10px 40px rgba(0,0,0,0.3);
   text-align: center;
   display: flex;
@@ -295,9 +295,9 @@ h2 {
 .camera-container {
   width: 320px;
   height: 240px;
-  border-radius: 12px; 
+  border-radius: 12px;
   background: #0F172A;
-  border: 2px dashed #334155; 
+  border: 2px dashed #334155;
   position: relative;
   overflow: hidden;
   margin-bottom: 32px;
@@ -309,18 +309,18 @@ h2 {
 }
 
 .camera-container.scanning-active {
-  border-color: #3B82F6; 
+  border-color: #3B82F6;
   box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
 }
 
 .camera-feed {
   width: 100%;
   height: 100%;
-  object-fit: cover; 
+  object-fit: cover;
 }
 
 video.camera-feed {
-  transform: scaleX(-1); 
+  transform: scaleX(-1);
 }
 
 .camera-placeholder {
@@ -376,7 +376,7 @@ video.camera-feed {
 }
 
 .error-msg {
-  color: #EF4444; 
+  color: #EF4444;
   background: rgba(239, 68, 68, 0.1);
   padding: 10px 16px;
   border-radius: 8px;
