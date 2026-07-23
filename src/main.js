@@ -21,25 +21,11 @@ app.use(createPinia());
 app.config.globalProperties.$keycloak = keycloak;
 app.provide("keycloak", keycloak);
 
-keycloak
-  .init({
-    onLoad: "check-sso",
-    checkLoginIframe: false,
-    pkceMethod: "S256",
-  })
-  .then(async (authenticated) => {
-    console.log("Authenticated:", authenticated);
-
-    if (authenticated) {
-      localStorage.setItem("token", keycloak.token);
-
-      console.log("Antes del push");
-
-      await router.push("/dashboard");
-
-      console.log("Después del push");
-      console.log(router.currentRoute.value.fullPath);
-    }
-
-    app.mount("#app");
-  });
+keycloak.init({
+  onLoad: "none",
+  checkLoginIframe: false,
+  pkceMethod: "S256",
+  redirectUri: window.location.origin,
+}).then(() => {
+  app.mount("#app");
+});
