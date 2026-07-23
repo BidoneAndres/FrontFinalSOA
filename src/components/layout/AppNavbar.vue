@@ -6,7 +6,7 @@
             variant="text"
             @click="layout.sidebar = !layout.sidebar"
         />
-        
+
     </div>
 
     <div class="right">
@@ -53,7 +53,7 @@ const parseJwt = (token) => {
 const logout = () => {
     localStorage.removeItem('token');
     if (keycloak && keycloak.authenticated) {
-        keycloak.logout({ redirectUri: window.location.origin });
+        keycloak.logout({ redirectUri: 'https://cernikiw3.chickenkiller.com/web/' });
     } else {
         router.push('/');
     }
@@ -74,7 +74,7 @@ onMounted(() => {
 .navbar {
     height: 72px;
     background: #1E293B;
-    border-radius: 0; 
+    border-radius: 0;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -106,6 +106,6 @@ h2 {
     font-weight: 500;
     font-size: 1rem;
     margin-right: 4px;
-    text-transform: capitalize; 
+    text-transform: capitalize;
 }
 </style>

@@ -3,6 +3,7 @@ import { ref, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
 import apiChaco from '@/services/apiChaco';
 import keycloak from '@/router/keycloak';
+import axios from 'axios';
 
 const videoRef = ref(null);
 const canvasRef = ref(null);
@@ -81,25 +82,26 @@ const authenticateUser = async () => {
 
   try {
 
-    const response = await apiChaco.post('/nodo-login-facial-vivo', {
+    // Reemplazar apiChaco.post por axios directo:
+    const response = await axios.post('https://cernikiw3.chickenkiller.com/nodo-login-facial-vivo', {
       image: imageData
     });
 
-
+    console.log(response)
     const token = response.data.access_token;
-   // const user = response.data.user;
-
     localStorage.setItem('token', token);
 
+    // Sincronizar Keycloak con el token recibido
+    keycloak.token = token;
+    keycloak.authenticated = true;
 
-    router.push('/');
-
+    router.push('/dashboard');
   } catch (error) {
 
     if (error.response && error.response.data && error.response.data.detail) {
-        errorMessage.value = error.response.data.detail;
+      errorMessage.value = error.response.data.detail;
     } else {
-        errorMessage.value = 'Rostro no reconocido o nivel de confianza insuficiente.';
+      errorMessage.value = 'Rostro no reconocido o nivel de confianza insuficiente.';
     }
   } finally {
     isScanning.value = false;
@@ -130,20 +132,10 @@ onBeforeUnmount(() => {
 
       <div class="camera-container" :class="{ 'scanning-active': isScanning }">
 
-        <video
-          ref="videoRef"
-          autoplay
-          playsinline
-          muted
-          class="camera-feed"
-          v-show="cameraActive && !uploadedImage"
-        ></video>
+        <video ref="videoRef" autoplay playsinline muted class="camera-feed"
+          v-show="cameraActive && !uploadedImage"></video>
 
-        <img
-          v-if="uploadedImage"
-          :src="uploadedImage"
-          class="camera-feed"
-        />
+        <img v-if="uploadedImage" :src="uploadedImage" class="camera-feed" />
 
         <div v-if="!cameraActive && !uploadedImage" class="camera-placeholder">
           <v-icon size="40" color="#94A3B8" class="mb-2">mdi-webcam</v-icon>
@@ -159,46 +151,22 @@ onBeforeUnmount(() => {
       <canvas ref="canvasRef" style="display: none;"></canvas>
       <input type="file" ref="fileInputRef" accept="image/*" style="display: none" @change="handleFileUpload" />
 
-      <v-btn
-        block
-        color="#3B82F6"
-        size="x-large"
-        class="action-btn"
-        :loading="isScanning"
-        :disabled="!cameraActive && !uploadedImage"
-        @click="authenticateUser"
-      >
+      <v-btn block color="#3B82F6" size="x-large" class="action-btn" :loading="isScanning"
+        :disabled="!cameraActive && !uploadedImage" @click="authenticateUser">
         Escanear e Ingresar
       </v-btn>
 
       <div class="actions-row mt-4 gap-2">
-        <v-btn
-          v-if="cameraActive && !uploadedImage"
-          variant="text"
-          size="small"
-          class="fallback-btn text-red-400 hover:text-red-300"
-          @click="stopCamera"
-        >
+        <v-btn v-if="cameraActive && !uploadedImage" variant="text" size="small"
+          class="fallback-btn text-red-400 hover:text-red-300" @click="stopCamera">
           <v-icon left class="mr-1">mdi-camera-off</v-icon> Apagar cámara
         </v-btn>
 
-        <v-btn
-          v-if="!uploadedImage"
-          variant="text"
-          size="small"
-          class="fallback-btn"
-          @click="triggerFileUpload"
-        >
+        <v-btn v-if="!uploadedImage" variant="text" size="small" class="fallback-btn" @click="triggerFileUpload">
           <v-icon left class="mr-1">mdi-upload</v-icon> Subir foto manual
         </v-btn>
 
-        <v-btn
-          v-if="uploadedImage"
-          variant="text"
-          size="small"
-          class="fallback-btn"
-          @click="startCamera"
-        >
+        <v-btn v-if="uploadedImage" variant="text" size="small" class="fallback-btn" @click="startCamera">
           <v-icon left class="mr-1">mdi-camera</v-icon> Usar cámara web
         </v-btn>
       </div>
@@ -207,14 +175,7 @@ onBeforeUnmount(() => {
         <span>o</span>
       </div>
 
-      <v-btn
-        block
-        variant="outlined"
-        color="#94A3B8"
-        size="large"
-        class="keycloak-btn"
-        @click="loginWithKeycloak"
-      >
+      <v-btn block variant="outlined" color="#94A3B8" size="large" class="keycloak-btn" @click="loginWithKeycloak">
         <v-icon left class="mr-2">mdi-key</v-icon>
         Iniciar sesión de otra forma
       </v-btn>
@@ -243,6 +204,7 @@ onBeforeUnmount(() => {
 .gap-2 {
   gap: 12px;
 }
+
 .text-red-400 {
   color: #F87171 !important;
 }
@@ -254,7 +216,7 @@ onBeforeUnmount(() => {
   padding: 40px;
   width: 100%;
   max-width: 440px;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
   text-align: center;
   display: flex;
   flex-direction: column;
@@ -325,7 +287,10 @@ video.camera-feed {
 
 .camera-placeholder {
   position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -346,10 +311,23 @@ video.camera-feed {
 }
 
 @keyframes scan {
-  0% { top: 0; opacity: 0; }
-  10% { opacity: 1; }
-  90% { opacity: 1; }
-  100% { top: 100%; opacity: 0; }
+  0% {
+    top: 0;
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 1;
+  }
+
+  90% {
+    opacity: 1;
+  }
+
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
 }
 
 .action-btn {
@@ -419,6 +397,7 @@ video.camera-feed {
 .fade-leave-active {
   transition: opacity 0.3s ease;
 }
+
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;

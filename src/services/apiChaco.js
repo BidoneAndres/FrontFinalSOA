@@ -32,16 +32,16 @@ apiChaco.interceptors.response.use(
   },
   (error) => {
     // Atajamos errores globales para que no crashee la app
-    
+
     // Si el backend te patea porque el token expiró o es inválido (Error 401)
     if (error.response && error.response.status === 401) {
       console.error('Acceso denegado o token expirado. Debes iniciar sesión nuevamente.');
-      
+
       // Opcional: limpiar el token viejo y mandar al usuario a la pantalla de login
       // localStorage.removeItem('token');
-      // window.location.href = '/login'; 
+      // window.location.href = '/login';
     }
-    
+
     // Si el backend de Python o Node-RED se caen (Error 500)
     if (error.response && error.response.status === 500) {
       console.error('Error interno del servidor en el backend.');
