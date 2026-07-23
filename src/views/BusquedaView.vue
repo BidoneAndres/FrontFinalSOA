@@ -535,15 +535,6 @@ const formatConfidence = (value) => {
 
 };
 
-const obtenerUrlImagen = (frameId) => {
-
-  const baseURL =
-    api.defaults.baseURL || "http://localhost:5000";
-
-  return `${baseURL}/get-frame/${frameId}`;
-
-};
-
 const imagenError = (event) => {
 
   event.target.src =

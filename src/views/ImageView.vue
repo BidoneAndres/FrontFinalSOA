@@ -483,11 +483,9 @@
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from "vue";
-import { useRouter } from "vue-router"; // <-- Importamos el router
-import api from "@/services/apiChaco.js";
+import api from "@/services/api.js";
+import apiChaco from "@/services/apiChaco.js";
 import { getFrameUrl } from "@/config/seaweed.js";
-
-const router = useRouter(); // <-- Inicializamos el router
 
 /* ==========================================================
  * ESTADOS
@@ -576,7 +574,7 @@ const cargarModelos = async () => {
   try {
     // Llamada REAL a tu backend. 
     // Asegurate de que la ruta "/models" sea la correcta en tu API.
-    const { data } = await api.get("/detections/models");
+    const { data } = await apiChaco.get("/detections/models");
     
     
     // Si tu backend devuelve un formato distinto, mapealo acá. 
@@ -683,7 +681,7 @@ const procesarImagen = async () => {
       formData.append("metadata", JSON.stringify(metadata));
     }
 
-    const response = await api.post("/detection", formData, {
+    const response = await apiChaco.post("/detection", formData, {
       // Necesario para que Axios envíe correctamente archivos FormData
       headers: {
         'Content-Type': 'multipart/form-data'
@@ -694,12 +692,6 @@ const procesarImagen = async () => {
     modalResultado.value = true;
 
     mostrarAlerta("Imagen procesada correctamente");
-    
-    // REDIRECCIÓN: Acá llevamos al usuario a ver el resultado.
-    // Asumimos que el backend devuelve un ID del análisis creado (ej: response.data.id)
-    if (response.data && response.data.id) {
-      router.push({ name: 'resultados', params: { id: response.data.id } });
-    }
 
   } catch (e) {
     console.error("Error en la inferencia:", e);
