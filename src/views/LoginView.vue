@@ -108,7 +108,7 @@ const authenticateUser = async () => {
 
 const loginWithKeycloak = () => {
   keycloak.login({
-    redirectUri: window.location.origin
+    redirectUri: window.location.origin+'/web'
   });
 };
 
