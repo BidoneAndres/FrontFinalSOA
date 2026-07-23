@@ -122,7 +122,7 @@ onBeforeUnmount(() => {
   <div class="login-layout">
     <div class="login-card">
 
-      <div class="header">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
+      <div class="header">
         <div class="logo-square">AI</div>
         <h2>VisionAI</h2>
       </div>
